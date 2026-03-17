@@ -101,7 +101,7 @@
 
         // Events für 18.03.–24.03.2026 laden (Party, Theater, Ausstellung)
         function loadEvents() {
-            const events = {
+            const allEvents = {
                 party: [
                     {
                         name: "Vollmondkonzert – Was uns verbindet",
@@ -191,11 +191,11 @@
             const eventsList = document.getElementById('events-list');
             let html = '';
             
-            // HTML für jede Kategorie generieren
-            for (const [category, events] of Object.entries(events)) {
+            // Korrigierte Schleife: Verwende 'category' und 'categoryEvents' als Variablennamen
+            for (const [category, categoryEvents] of Object.entries(allEvents)) {
                 html += `<div class="category">
                     <h3>${category.charAt(0).toUpperCase() + category.slice(1)}</h3>`;
-                events.forEach(event => {
+                categoryEvents.forEach(event => {
                     html += `<div class="event-item">
                         <div class="event-date">${event.date}</div>
                         <div><strong>${event.name}</strong></div>
