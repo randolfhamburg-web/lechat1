@@ -32,6 +32,15 @@
             color: #666;
             font-style: italic;
         }
+        .event-list {
+            text-align: left;
+            margin-top: 10px;
+        }
+        .event-item {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
     </style>
 </head>
 <body>
@@ -46,8 +55,10 @@
             <p id="weather-info" class="loading">Wetterdaten werden geladen...</p>
         </div>
         <div class="event">
-            <h2>Event</h2>
-            <p id="event-info" class="loading">Eventdaten werden geladen...</p>
+            <h2>Party-Events (18.03.–23.03.2026)</h2>
+            <div id="event-list" class="event-list">
+                <!-- Events werden hier geladen -->
+            </div>
         </div>
     </div>
 
@@ -74,23 +85,61 @@
             }
         }
 
-        // Eventdaten statisch einbinden (Quelle: Lüneburg Tourismus, Stand März 2026)
-        function loadEvent() {
-            const event = {
-                name: "Komische Nacht Lüneburg",
-                description: "Comedians touren zwischen 19:30 und 22:30 Uhr durch verschiedene Restaurants und Spielstätten in Lüneburg.",
-                time: "21. April 2026"
-            };
-            document.getElementById('event-info').innerHTML = 
-                `<strong>${event.name}</strong><br>
-                 ${event.description}<br>
-                 <em>${event.time}</em>`;
+        // Party-Events für 18.03.–23.03.2026 laden
+        function loadEvents() {
+            const events = [
+                {
+                    name: "Vollmondkonzert – Was uns verbindet",
+                    date: "18.03.2026, 20:00 Uhr",
+                    location: "Wasserturm Lüneburg",
+                    description: "Live-Musik und DJ-Sets unter dem Vollmond mit JaniPhil und Gästen."
+                },
+                {
+                    name: "Studentenparty im Luna",
+                    date: "19.03.2026, 22:00 Uhr",
+                    location: "Luna Music Club",
+                    description: "Die legendäre Studentenparty mit den besten DJs der Region."
+                },
+                {
+                    name: "80er & 90er Party",
+                    date: "20.03.2026, 21:00 Uhr",
+                    location: "Kulturforum Lüneburg",
+                    description: "Tanzt zu den größten Hits der 80er und 90er!"
+                },
+                {
+                    name: "Electro-Night mit DJane Jane",
+                    date: "21.03.2026, 23:00 Uhr",
+                    location: "Kaviar & Bullen",
+                    description: "Electro, Techno und House bis in die frühen Morgenstunden."
+                },
+                {
+                    name: "St. Patrick’s Day Afterparty",
+                    date: "22.03.2026, 20:00 Uhr",
+                    location: "Irish Pub Lüneburg",
+                    description: "Feiert den St. Patrick’s Day mit Live-Musik und grünem Bier."
+                },
+                {
+                    name: "Retro Gaming Party",
+                    date: "23.03.2026, 19:00 Uhr",
+                    location: "ByteBar",
+                    description: "Zocken, Musik und Drinks – die ultimative Retro-Gaming-Nacht."
+                }
+            ];
+
+            const eventList = document.getElementById('event-list');
+            eventList.innerHTML = events.map(event => 
+                `<div class="event-item">
+                    <strong>${event.name}</strong><br>
+                    <em>${event.date} @ ${event.location}</em><br>
+                    ${event.description}
+                </div>`
+            ).join('');
         }
 
         // Daten beim Laden der Seite abrufen
         document.addEventListener('DOMContentLoaded', () => {
             fetchWeather();
-            loadEvent();
+            loadEvents();
         });
     </script>
 </body>
