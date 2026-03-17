@@ -47,7 +47,11 @@
         </div>
         <div class="event">
             <h2>Event</h2>
-            <p id="event-info" class="loading">Eventdaten werden geladen...</p>
+            <p id="event-info">
+                <strong>Wochenmarkt auf dem Marktplatz</strong><br>
+                Frische regionale Produkte und handgemachte Waren.<br>
+                <em>Jeden Mittwoch und Samstag von 7:00 bis 13:00 Uhr</em>
+            </p>
         </div>
     </div>
 
@@ -74,29 +78,9 @@
             }
         }
 
-        // Eventdaten abrufen (Beispiel)
-        async function fetchEvent() {
-            try {
-                // Hier könnte eine echte API-Anfrage stehen, z.B. an eine lokale Event-Datenbank
-                // Für dieses Beispiel simulieren wir ein Event
-                const event = {
-                    name: "Wochenmarkt auf dem Marktplatz",
-                    description: "Frische regionale Produkte und handgemachte Waren.",
-                    time: "Jeden Mittwoch und Samstag von 7:00 bis 13:00 Uhr"
-                };
-                document.getElementById('event-info').innerHTML = 
-                    `<strong>${event.name}</strong><br>
-                     ${event.description}<br>
-                     <em>${event.time}</em>`;
-            } catch (error) {
-                document.getElementById('event-info').textContent = 'Eventdaten konnten nicht geladen werden.';
-            }
-        }
-
         // Daten beim Laden der Seite abrufen
         document.addEventListener('DOMContentLoaded', () => {
             fetchWeather();
-            fetchEvent();
         });
     </script>
 </body>
