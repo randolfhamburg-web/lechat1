@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lüneburg Info</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+            background-color: #f4f4f9;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .time, .weather, .event {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #e9f7fe;
+        }
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Lüneburg Info</h1>
+        <div class="time">
+            <h2>Uhrzeit</h2>
+            <p id="current-time"></p>
+        </div>
+        <div class="weather">
+            <h2>Wetter</h2>
+            <p id="weather-info" class="loading">Wetterdaten werden geladen...</p>
+        </div>
+        <div class="event">
+            <h2>Event</h2>
+            <p id="event-info" class="loading">Eventdaten werden geladen...</p>
+        </div>
+    </div>
+
+    <script>
+        // Uhrzeit aktualisieren
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent = now.toLocaleString('de-DE');
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Wetterdaten abrufen
+        async function fetchWeather() {
+            try {
+                const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=53.25&longitude=10.41&current_weather=true&timezone=Europe/Berlin`);
+                const data = await response.json();
+                const weather = data.current_weather;
+                document.getElementById('weather-info').innerHTML = 
+                    `<strong>Temperatur:</strong> ${weather.temperature}°C<br>
+                     <strong>Wetter:</strong> ${weather.weathercode === 0 ? 'Klar' : 'Bewölkt/Regen'}`;
+            } catch (error) {
+                document.getElementById('weather-info').textContent = 'Wetterdaten konnten nicht geladen werden.';
+            }
+        }
+
+        // Eventdaten abrufen (Beispiel)
+        async function fetchEvent() {
+            try {
+                // Hier könnte eine echte API-Anfrage stehen, z.B. an eine lokale Event-Datenbank
+                // Für dieses Beispiel simulieren wir ein Event
+                const event = {
+                    name: "Wochenmarkt auf dem Marktplatz",
+                    description: "Frische regionale Produkte und handgemachte Waren.",
+                    time: "Jeden Mittwoch und Samstag von 7:00 bis 13:00 Uhr"
+                };
+                document.getElementById('event-info').innerHTML = 
+                    `<strong>${event.name}</strong><br>
+                     ${event.description}<br>
+                     <em>${event.time}</em>`;
+            } catch (error) {
+                document.getElementById('event-info').textContent = 'Eventdaten konnten nicht geladen werden.';
+            }
+        }
+
+        // Daten beim Laden der Seite abrufen
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchWeather();
+            fetchEvent();
+        });
+    </script>
+</body>
+</html>
