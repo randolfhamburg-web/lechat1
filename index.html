@@ -12,7 +12,7 @@
             background-color: #f4f4f9;
         }
         .container {
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
             padding: 20px;
             background-color: white;
@@ -22,7 +22,7 @@
         h1 {
             color: #333;
         }
-        .time, .weather, .event {
+        .time, .weather, .events {
             margin: 20px 0;
             padding: 15px;
             border-radius: 5px;
@@ -32,14 +32,28 @@
             color: #666;
             font-style: italic;
         }
-        .event-list {
+        .category {
+            margin-bottom: 25px;
             text-align: left;
-            margin-top: 10px;
+        }
+        .category h3 {
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+            color: #2c3e50;
         }
         .event-item {
             margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #ddd;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-left: 4px solid #3498db;
+        }
+        .event-date {
+            font-weight: bold;
+            color: #e74c3c;
+        }
+        .event-location {
+            font-style: italic;
+            color: #7f8c8d;
         }
     </style>
 </head>
@@ -54,9 +68,9 @@
             <h2>Wetter</h2>
             <p id="weather-info" class="loading">Wetterdaten werden geladen...</p>
         </div>
-        <div class="event">
-            <h2>Party-Events (18.03.–23.03.2026)</h2>
-            <div id="event-list" class="event-list">
+        <div class="events">
+            <h2>Events (18.03.–24.03.2026)</h2>
+            <div id="events-list">
                 <!-- Events werden hier geladen -->
             </div>
         </div>
@@ -79,61 +93,120 @@
                 const weather = data.current_weather;
                 document.getElementById('weather-info').innerHTML = 
                     `<strong>Temperatur:</strong> ${weather.temperature}°C<br>
-                     <strong>Wetter:</strong> ${weather.weathercode === 0 ? 'Klar' : 'Bewölkt/Regen'}`;
+                     <strong>Wetter:</strong> ${weather.weathercode === 0 ? 'Klar' : weather.weathercode < 3 ? 'Bewölkt' : 'Regen/Schnee'}`;
             } catch (error) {
                 document.getElementById('weather-info').textContent = 'Wetterdaten konnten nicht geladen werden.';
             }
         }
 
-        // Party-Events für 18.03.–23.03.2026 laden
+        // Events für 18.03.–24.03.2026 laden (Party, Theater, Ausstellung)
         function loadEvents() {
-            const events = [
-                {
-                    name: "Vollmondkonzert – Was uns verbindet",
-                    date: "18.03.2026, 20:00 Uhr",
-                    location: "Wasserturm Lüneburg",
-                    description: "Live-Musik und DJ-Sets unter dem Vollmond mit JaniPhil und Gästen."
-                },
-                {
-                    name: "Studentenparty im Luna",
-                    date: "19.03.2026, 22:00 Uhr",
-                    location: "Luna Music Club",
-                    description: "Die legendäre Studentenparty mit den besten DJs der Region."
-                },
-                {
-                    name: "80er & 90er Party",
-                    date: "20.03.2026, 21:00 Uhr",
-                    location: "Kulturforum Lüneburg",
-                    description: "Tanzt zu den größten Hits der 80er und 90er!"
-                },
-                {
-                    name: "Electro-Night mit DJane Jane",
-                    date: "21.03.2026, 23:00 Uhr",
-                    location: "Kaviar & Bullen",
-                    description: "Electro, Techno und House bis in die frühen Morgenstunden."
-                },
-                {
-                    name: "St. Patrick’s Day Afterparty",
-                    date: "22.03.2026, 20:00 Uhr",
-                    location: "Irish Pub Lüneburg",
-                    description: "Feiert den St. Patrick’s Day mit Live-Musik und grünem Bier."
-                },
-                {
-                    name: "Retro Gaming Party",
-                    date: "23.03.2026, 19:00 Uhr",
-                    location: "ByteBar",
-                    description: "Zocken, Musik und Drinks – die ultimative Retro-Gaming-Nacht."
-                }
-            ];
+            const events = {
+                party: [
+                    {
+                        name: "Vollmondkonzert – Was uns verbindet",
+                        date: "18.03.2026, 20:00 Uhr",
+                        location: "Wasserturm Lüneburg",
+                        description: "Live-Musik und DJ-Sets unter dem Vollmond mit JaniPhil und Gästen."
+                    },
+                    {
+                        name: "Studentenparty im Luna",
+                        date: "19.03.2026, 22:00 Uhr",
+                        location: "Luna Music Club",
+                        description: "Die legendäre Studentenparty mit den besten DJs der Region."
+                    },
+                    {
+                        name: "80er & 90er Party",
+                        date: "20.03.2026, 21:00 Uhr",
+                        location: "Kulturforum Lüneburg",
+                        description: "Tanzt zu den größten Hits der 80er und 90er!"
+                    },
+                    {
+                        name: "Electro-Night mit DJane Jane",
+                        date: "21.03.2026, 23:00 Uhr",
+                        location: "Kaviar & Bullen",
+                        description: "Electro, Techno und House bis in die frühen Morgenstunden."
+                    },
+                    {
+                        name: "St. Patrick’s Day Afterparty",
+                        date: "22.03.2026, 20:00 Uhr",
+                        location: "Irish Pub Lüneburg",
+                        description: "Feiert den St. Patrick’s Day mit Live-Musik und grünem Bier."
+                    },
+                    {
+                        name: "Retro Gaming Party",
+                        date: "23.03.2026, 19:00 Uhr",
+                        location: "ByteBar",
+                        description: "Zocken, Musik und Drinks – die ultimative Retro-Gaming-Nacht."
+                    }
+                ],
+                theater: [
+                    {
+                        name: "Die Braumeisterin von Lüneburg",
+                        date: "18.03.2026, 20:00 Uhr",
+                        location: "Theater Lüneburg",
+                        description: "Ein unterhaltsames Theaterstück über die Braukunst und Geschichte Lüneburgs."
+                    },
+                    {
+                        name: "Kabarett: Hartmut Uhlemann",
+                        date: "19.03.2026, 19:30 Uhr",
+                        location: "TidE – Theater in der Elbtalaue",
+                        description: "Intelligente, böse und poetische Chansons – berührend komödiantisch."
+                    },
+                    {
+                        name: "Improtheater: Die Gorillas",
+                        date: "22.03.2026, 20:00 Uhr",
+                        location: "KulturBäckerei",
+                        description: "Spontanes Theater nach Publikumsvorgaben – jedes Mal einzigartig!"
+                    }
+                ],
+                ausstellung: [
+                    {
+                        name: "Museum Erleben: Misdroy und Wyk auf Föhr",
+                        date: "18.03.2026, 14:30 Uhr",
+                        location: "Ostpreußisches Landesmuseum",
+                        description: "Vortrag und Ausstellung über die Geschichte der Nordseeinseln."
+                    },
+                    {
+                        name: "Kunstausstellung: Moderne Malerei",
+                        date: "19.03.–24.03.2026, 10:00–18:00 Uhr",
+                        location: "Kunstverein Lüneburg",
+                        description: "Werke zeitgenössischer Künstler aus der Region."
+                    },
+                    {
+                        name: "Fotografie: Lüneburg im Wandel",
+                        date: "20.03.2026, 11:00 Uhr",
+                        location: "Stadtgalerie",
+                        description: "Historische und aktuelle Fotos der Salzstadt."
+                    },
+                    {
+                        name: "Memory der Dinge",
+                        date: "21.03.–23.03.2026, 12:00–17:00 Uhr",
+                        location: "Museum Lüneburg",
+                        description: "Eine interaktive Ausstellung über Erinnerungsstücke und ihre Geschichten."
+                    }
+                ]
+            };
 
-            const eventList = document.getElementById('event-list');
-            eventList.innerHTML = events.map(event => 
-                `<div class="event-item">
-                    <strong>${event.name}</strong><br>
-                    <em>${event.date} @ ${event.location}</em><br>
-                    ${event.description}
-                </div>`
-            ).join('');
+            const eventsList = document.getElementById('events-list');
+            
+            // HTML für jede Kategorie generieren
+            let html = '';
+            for (const [category, events] of Object.entries(events)) {
+                html += `<div class="category">
+                    <h3>${category.charAt(0).toUpperCase() + category.slice(1)}</h3>`;
+                events.forEach(event => {
+                    html += `<div class="event-item">
+                        <div class="event-date">${event.date}</div>
+                        <div><strong>${event.name}</strong></div>
+                        <div class="event-location">${event.location}</div>
+                        <div>${event.description}</div>
+                    </div>`;
+                });
+                html += `</div>`;
+            }
+            
+            eventsList.innerHTML = html;
         }
 
         // Daten beim Laden der Seite abrufen
