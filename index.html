@@ -108,8 +108,14 @@
         
         // Helfer: Prüfe, ob ein Event im aktuellen Zeitraum liegt
         function isEventInRange(eventDateStr, startDate, endDate) {
-            const eventDate = new Date(eventDateStr.split(',')[0].trim().split('.').reverse().join('-'));
-            return eventDate >= startDate && eventDate <= endDate;
+            const eventDateParts = eventDateStr.split(',')[0].trim().split('.').reverse();
+            // Prüfe, ob das Datum im Format DD.MM.YYYY vorliegt
+            if (eventDateParts.length === 3) {
+                const eventDate = new Date(eventDateParts.join('-'));
+                return eventDate >= startDate && eventDate <= endDate;
+            }
+            // Falls kein Datum gefunden wird, überspringen
+            return false;
         }
         
         // Berechne den aktuellen Zeitraum (heute + 6 Tage)
@@ -169,6 +175,11 @@
                         { name: "Kunstausstellung: Moderne Malerei", date: "19.03.–24.03.2026, 10:00–18:00 Uhr", location: "Kunstverein Lüneburg", description: "Werke zeitgenössischer Künstler aus der Region." },
                         { name: "Fotografie: Lüneburg im Wandel", date: "20.03.2026, 11:00 Uhr", location: "Stadtgalerie", description: "Historische und aktuelle Fotos der Salzstadt." },
                         { name: "Memory der Dinge", date: "21.03.–23.03.2026, 12:00–17:00 Uhr", location: "Museum Lüneburg", description: "Eine interaktive Ausstellung über Erinnerungsstücke und ihre Geschichten." }
+                    ],
+                    konzerte: [
+                        { name: "Konzert: Ina Müller live", date: "19.03.2026, 20:00 Uhr", location: "LKH Arena Lüneburg", description: "Die beliebte Sängerin mit ihren größten Hits." },
+                        { name: "Jazz-Abend mit der Lüneburg Big Band", date: "21.03.2026, 19:30 Uhr", location: "Kulturforum Lüneburg", description: "Klassischer Jazz und moderne Interpretationen." },
+                        { name: "Indie-Konzert: The New Shores", date: "23.03.2026, 20:30 Uhr", location: "Kaviar & Bullen", description: "Aufstrebende Indie-Band aus Hamburg." }
                     ]
                 },
                 harburg: {
@@ -184,6 +195,10 @@
                     ausstellung: [
                         { name: "Kunstausstellung: Harburger Künstler", date: "18.03.–24.03.2026, 11:00–19:00 Uhr", location: "Galerie Harburg", description: "Werke lokaler Künstler aus Harburg." },
                         { name: "Historische Ausstellung: Harburg früher", date: "20.03.2026, 14:00 Uhr", location: "Stadtmuseum Harburg", description: "Fotos und Dokumente zur Geschichte Harburgs." }
+                    ],
+                    konzerte: [
+                        { name: "Konzert: Harburger Musiknacht", date: "20.03.2026, 19:30 Uhr", location: "Stadthalle Harburg", description: "Lokale Bands und Solo-Künstler präsentieren ihr Repertoire." },
+                        { name: "Klassik-Abend mit dem Harburg Orchester", date: "22.03.2026, 20:00 Uhr", location: "Kulturkirche Harburg", description: "Klassische Musik in historischer Atmosphäre." }
                     ]
                 }
             };
