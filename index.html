@@ -285,16 +285,16 @@
 
     <script>
         // Aktuelle Stadt
-        let currentCity = ‘lüneburg’;
+        let currentCity = 'lüneburg';
 
         // CORS-Proxy für externen Zugriff
-        const CORS_PROXY = ‘https://api.codetabs.com/v1/proxy?quest=’;
-        const LUENE_INFO_URL = ‘https://www.luene-info.de/termine/woche.html’;
+        const CORS_PROXY = 'https://api.codetabs.com/v1/proxy?quest=';
+        const LUENE_INFO_URL = 'https://www.luene-info.de/termine/woche.html';
 
         // Helfer: Formatiere Datum als DD.MM.YYYY
         function formatDate(date) {
-            const day = String(date.getDate()).padStart(2, ‘0’);
-            const month = String(date.getMonth() + 1).padStart(2, ‘0’);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
             const year = date.getFullYear();
             return `${day}.${month}.${year}`;
         }
@@ -321,7 +321,7 @@
         // Uhrzeit aktualisieren
         function updateTime() {
             const now = new Date();
-            document.getElementById(‘current-time’).textContent = now.toLocaleString(‘de-DE’);
+            document.getElementById('current-time').textContent = now.toLocaleString('de-DE');
         }
         setInterval(updateTime, 1000);
         updateTime();
@@ -329,21 +329,23 @@
         // Wetterdaten abrufen
         async function fetchWeather() {
             try {
-                const coords = currentCity === ‘lüneburg’ ? { lat: 53.25, lon: 10.41 } : { lat: 53.4667, lon: 10.1833 };
+                const coords = currentCity === 'lüneburg' ? { lat: 53.25, lon: 10.41 } : { lat: 53.4667, lon: 10.1833 };
                 const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current_weather=true&timezone=Europe/Berlin`);
+                if (!response.ok) throw new Error('Weather request failed');
                 const data = await response.json();
                 const weather = data.current_weather;
-                document.getElementById(‘weather-info’).innerHTML =
+                if (!weather) throw new Error('Missing weather data');
+                document.getElementById('weather-info').innerHTML =
                     `<strong>Temperatur:</strong> ${weather.temperature}°C<br>
-                     <strong>Wetter:</strong> ${weather.weathercode === 0 ? ‘Klar’ : weather.weathercode < 3 ? ‘Bewölkt’ : ‘Regen/Schnee’}`;
+                     <strong>Wetter:</strong> ${weather.weathercode === 0 ? 'Klar' : weather.weathercode < 3 ? 'Bewölkt' : 'Regen/Schnee'}`;
             } catch (error) {
-                document.getElementById(‘weather-info’).textContent = ‘Wetterdaten konnten nicht geladen werden.’;
+                document.getElementById('weather-info').textContent = 'Wetterdaten konnten nicht geladen werden.';
             }
         }
 
         // Helfer: Erstelle Google Maps-Link für einen Ort
         function createMapsLink(location) {
-            const baseUrl = ‘https://www.google.com/maps/search/?api=1&query=’;
+            const baseUrl = 'https://www.google.com/maps/search/?api=1&query=';
             const fullLocation = `${location}, Lüneburg`;
             return `${baseUrl}${encodeURIComponent(fullLocation)}`;
         }
@@ -351,15 +353,15 @@
         // HTML von luene-info.de parsen
         function parseEventsFromHTML(htmlText) {
             const parser = new DOMParser();
-            const doc = parser.parseFromString(htmlText, ‘text/html’);
-            const rows = doc.querySelectorAll(‘tr’);
+            const doc = parser.parseFromString(htmlText, 'text/html');
+            const rows = doc.querySelectorAll('tr');
             const events = [];
             let currentDate = null;
-            let currentDateStr = ‘’;
+            let currentDateStr = '';
 
             for (const row of rows) {
                 // Datumszeile erkennen
-                const datumEl = row.querySelector(‘.termine_datum’);
+                const datumEl = row.querySelector('.termine_datum');
                 if (datumEl) {
                     currentDateStr = datumEl.textContent.trim();
                     currentDate = parseDayHeader(currentDateStr);
@@ -367,24 +369,24 @@
                 }
 
                 // Event-Zeile erkennen
-                const titelEl = row.querySelector(‘.termine_titel’);
+                const titelEl = row.querySelector('.termine_titel');
                 if (titelEl && currentDate) {
-                    const uhrzeitEl = row.querySelector(‘.termine_uhrzeit’);
-                    const titel2El = row.querySelector(‘.termine_titel_2’);
-                    const textEl = row.querySelector(‘.termine_text_2’);
-                    const ortEl = row.querySelector(‘.termine_ort’);
+                    const uhrzeitEl = row.querySelector('.termine_uhrzeit');
+                    const titel2El = row.querySelector('.termine_titel_2');
+                    const textEl = row.querySelector('.termine_text_2');
+                    const ortEl = row.querySelector('.termine_ort');
 
                     const name = titelEl.textContent.trim();
-                    const subtitle = titel2El ? titel2El.textContent.trim() : ‘’;
+                    const subtitle = titel2El ? titel2El.textContent.trim() : '';
                     const fullName = subtitle ? `${name} – ${subtitle}` : name;
 
                     events.push({
                         date: currentDate,
                         dateStr: currentDateStr,
-                        time: uhrzeitEl ? uhrzeitEl.textContent.trim().replace(/\s+/g, ‘ ‘) : ‘’,
+                        time: uhrzeitEl ? uhrzeitEl.textContent.trim().replace(/\s+/g, ' ') : '',
                         name: fullName,
-                        description: textEl ? textEl.textContent.trim().replace(/\s+/g, ‘ ‘) : ‘’,
-                        location: ortEl ? ortEl.textContent.trim() : ‘’
+                        description: textEl ? textEl.textContent.trim().replace(/\s+/g, ' ') : '',
+                        location: ortEl ? ortEl.textContent.trim() : ''
                     });
                 }
             }
@@ -394,20 +396,21 @@
         // Events laden und anzeigen
         async function loadEvents() {
             const dateRange = getDateRange();
-            const eventsTitle = document.getElementById(‘events-title’);
+            const eventsTitle = document.getElementById('events-title');
             eventsTitle.textContent = `Events Lüneburg (${formatDate(dateRange.start)}–${formatDate(dateRange.end)})`;
-            const eventsList = document.getElementById(‘events-list’);
+            const eventsList = document.getElementById('events-list');
 
-            if (currentCity !== ‘lüneburg’) {
-                eventsList.innerHTML = ‘<p>Für Harburg ist aktuell keine Event-Quelle verfügbar.</p>’;
+            if (currentCity !== 'lüneburg') {
+                eventsTitle.textContent = `Events Harburg (${formatDate(dateRange.start)}–${formatDate(dateRange.end)})`;
+                eventsList.innerHTML = '<p>Für Harburg ist aktuell keine Event-Quelle verfügbar.</p>';
                 return;
             }
 
-            eventsList.innerHTML = ‘<p class="loading">Events werden geladen...</p>’;
+            eventsList.innerHTML = '<p class="loading">Events werden geladen...</p>';
 
             try {
                 const response = await fetch(CORS_PROXY + encodeURIComponent(LUENE_INFO_URL));
-                if (!response.ok) throw new Error(‘Netzwerkfehler’);
+                if (!response.ok) throw new Error('Netzwerkfehler');
                 const htmlText = await response.text();
                 const allEvents = parseEventsFromHTML(htmlText);
 
@@ -415,44 +418,44 @@
                 const filtered = allEvents.filter(e => e.date >= dateRange.start && e.date <= dateRange.end);
 
                 if (filtered.length === 0) {
-                    eventsList.innerHTML = ‘<p>Keine Events im ausgewählten Zeitraum gefunden.</p>’;
+                    eventsList.innerHTML = '<p>Keine Events im ausgewählten Zeitraum gefunden.</p>';
                     return;
                 }
 
                 // Nach Datum gruppieren
-                let html = ‘’;
-                let lastDateStr = ‘’;
+                let html = '';
+                let lastDateStr = '';
                 for (const event of filtered) {
                     if (event.dateStr !== lastDateStr) {
-                        if (lastDateStr) html += ‘</div>’;
+                        if (lastDateStr) html += '</div>';
                         html += `<div class="category"><h3>${event.dateStr}</h3>`;
                         lastDateStr = event.dateStr;
                     }
-                    const mapsLink = event.location ? createMapsLink(event.location) : ‘#’;
+                    const mapsLink = event.location ? createMapsLink(event.location) : '#';
                     html += `<div class="event-item">
                         <div class="event-date">${event.time}</div>
                         <div><strong>${event.name}</strong></div>
-                        ${event.location ? `<div class="event-location"><a href="${mapsLink}" target="_blank" rel="noopener noreferrer">${event.location}</a></div>` : ‘’}
-                        ${event.description ? `<div>${event.description}</div>` : ‘’}
+                        ${event.location ? `<div class="event-location"><a href="${mapsLink}" target="_blank" rel="noopener noreferrer">${event.location}</a></div>` : ''}
+                        ${event.description ? `<div>${event.description}</div>` : ''}
                     </div>`;
                 }
-                if (lastDateStr) html += ‘</div>’;
+                if (lastDateStr) html += '</div>';
 
                 eventsList.innerHTML = html;
             } catch (error) {
-                eventsList.innerHTML = ‘<p><strong>Aktuell kein Zugriff</strong> auf die Event-Daten.</p>’;
+                eventsList.innerHTML = '<p><strong>Aktuell kein Zugriff</strong> auf die Event-Daten.</p>';
             }
         }
 
         // Stadt wechseln
         function updateCity() {
-            currentCity = document.getElementById(‘city-select’).value;
+            currentCity = document.getElementById('city-select').value;
             fetchWeather();
             loadEvents();
         }
 
         // Daten beim Laden der Seite abrufen
-        document.addEventListener(‘DOMContentLoaded’, () => {
+        document.addEventListener('DOMContentLoaded', () => {
             updateTime();
             fetchWeather();
             loadEvents();
