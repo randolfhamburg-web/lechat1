@@ -87,7 +87,7 @@
             <p id="weather-info" class="loading">Wetterdaten werden geladen...</p>
         </div>
         <div class="events">
-            <h2 id="events-title">Events (18.03.–24.03.2026)</h2>
+            <h2 id="events-title">Events (Heute–Nächste 6 Tage)</h2>
             <div id="events-list">
                 <!-- Events werden hier geladen -->
             </div>
@@ -97,6 +97,28 @@
     <script>
         // Aktuelle Stadt
         let currentCity = 'lüneburg';
+        
+        // Helfer: Formatiere Datum als DD.MM.YYYY
+        function formatDate(date) {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}.${month}.${year}`;
+        }
+        
+        // Helfer: Prüfe, ob ein Event im aktuellen Zeitraum liegt
+        function isEventInRange(eventDateStr, startDate, endDate) {
+            const eventDate = new Date(eventDateStr.split(',')[0].trim().split('.').reverse().join('-'));
+            return eventDate >= startDate && eventDate <= endDate;
+        }
+        
+        // Berechne den aktuellen Zeitraum (heute + 6 Tage)
+        function getDateRange() {
+            const today = new Date();
+            const endDate = new Date(today);
+            endDate.setDate(today.getDate() + 6);
+            return { start: today, end: endDate };
+        }
 
         // Uhrzeit aktualisieren
         function updateTime() {
@@ -121,8 +143,12 @@
             }
         }
 
-        // Events für die ausgewählte Stadt laden
+        // Events für die ausgewählte Stadt laden (nur im aktuellen Zeitraum)
         function loadEvents() {
+            const dateRange = getDateRange();
+            const eventsTitle = document.getElementById('events-title');
+            eventsTitle.textContent = `Events (${formatDate(dateRange.start)}–${formatDate(dateRange.end)})`;
+
             const allEvents = {
                 lüneburg: {
                     party: [
@@ -163,29 +189,32 @@
             };
 
             const eventsList = document.getElementById('events-list');
-            const eventsTitle = document.getElementById('events-title');
             let html = '';
             
-            // Titel anpassen
-            eventsTitle.textContent = `Events (18.03.–24.03.2026) – ${currentCity.charAt(0).toUpperCase() + currentCity.slice(1)}`;
-            
-            // Events für die aktuelle Stadt laden
+            // Events für die aktuelle Stadt und den aktuellen Zeitraum filtern
             const cityEvents = allEvents[currentCity];
             for (const [category, categoryEvents] of Object.entries(cityEvents)) {
-                html += `<div class="category">
-                    <h3>${category.charAt(0).toUpperCase() + category.slice(1)}</h3>`;
-                categoryEvents.forEach(event => {
-                    html += `<div class="event-item">
-                        <div class="event-date">${event.date}</div>
-                        <div><strong>${event.name}</strong></div>
-                        <div class="event-location">${event.location}</div>
-                        <div>${event.description}</div>
-                    </div>`;
+                const filteredEvents = categoryEvents.filter(event => {
+                    // Prüfe, ob das Event im aktuellen Zeitraum liegt
+                    return isEventInRange(event.date, dateRange.start, dateRange.end);
                 });
-                html += `</div>`;
+                
+                if (filteredEvents.length > 0) {
+                    html += `<div class="category">
+                        <h3>${category.charAt(0).toUpperCase() + category.slice(1)}</h3>`;
+                    filteredEvents.forEach(event => {
+                        html += `<div class="event-item">
+                            <div class="event-date">${event.date}</div>
+                            <div><strong>${event.name}</strong></div>
+                            <div class="event-location">${event.location}</div>
+                            <div>${event.description}</div>
+                        </div>`;
+                    });
+                    html += `</div>`;
+                }
             }
             
-            eventsList.innerHTML = html;
+            eventsList.innerHTML = html || '<p>Keine Events im ausgewählten Zeitraum gefunden.</p>';
         }
 
         // Stadt wechseln
