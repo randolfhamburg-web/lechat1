@@ -67,6 +67,15 @@
             font-style: italic;
             color: #7f8c8d;
         }
+        .event-location a {
+            color: inherit;
+            text-decoration: none;
+            border-bottom: 1px dotted #7f8c8d;
+            transition: border-color 0.2s;
+        }
+        .event-location a:hover {
+            border-bottom-color: #3498db;
+        }
         
         /* Rechtliche Hinweise */
         .legal-wrapper {
@@ -313,6 +322,13 @@
             }
         }
 
+        // Helfer: Erstelle Google Maps-Link für einen Ort
+        function createMapsLink(location, city) {
+            const baseUrl = 'https://www.google.com/maps/search/?api=1&query=';
+            const fullLocation = `${location}, ${city === 'lüneburg' ? 'Lüneburg' : 'Hamburg-Harburg'}`;
+            return `${baseUrl}${encodeURIComponent(fullLocation)}`;
+        }
+
         // Events für die ausgewählte Stadt laden (nur im aktuellen Zeitraum)
         function loadEvents() {
             const dateRange = getDateRange();
@@ -382,10 +398,13 @@
                     html += `<div class="category">
                         <h3>${category.charAt(0).toUpperCase() + category.slice(1)}</h3>`;
                     filteredEvents.forEach(event => {
+                        const mapsLink = createMapsLink(event.location, currentCity);
                         html += `<div class="event-item">
                             <div class="event-date">${event.date}</div>
                             <div><strong>${event.name}</strong></div>
-                            <div class="event-location">${event.location}</div>
+                            <div class="event-location">
+                                <a href="${mapsLink}" target="_blank" rel="noopener noreferrer">${event.location}</a>
+                            </div>
                             <div>${event.description}</div>
                         </div>`;
                     });
