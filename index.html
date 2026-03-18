@@ -285,40 +285,43 @@
 
     <script>
         // Aktuelle Stadt
-        let currentCity = 'lüneburg';
-        
+        let currentCity = ‘lüneburg’;
+
+        // CORS-Proxy für externen Zugriff
+        const CORS_PROXY = ‘https://api.allorigins.win/raw?url=’;
+        const LUENE_INFO_URL = ‘https://www.luene-info.de/termine/woche.html’;
+
         // Helfer: Formatiere Datum als DD.MM.YYYY
         function formatDate(date) {
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, ‘0’);
+            const month = String(date.getMonth() + 1).padStart(2, ‘0’);
             const year = date.getFullYear();
             return `${day}.${month}.${year}`;
         }
-        
-        // Helfer: Prüfe, ob ein Event im aktuellen Zeitraum liegt
-        function isEventInRange(eventDateStr, startDate, endDate) {
-            const eventDateParts = eventDateStr.split(',')[0].trim().split('.').reverse();
-            // Prüfe, ob das Datum im Format DD.MM.YYYY vorliegt
-            if (eventDateParts.length === 3) {
-                const eventDate = new Date(eventDateParts.join('-'));
-                return eventDate >= startDate && eventDate <= endDate;
-            }
-            // Falls kein Datum gefunden wird, überspringen
-            return false;
-        }
-        
+
         // Berechne den aktuellen Zeitraum (heute + 6 Tage)
         function getDateRange() {
             const today = new Date();
+            today.setHours(0, 0, 0, 0);
             const endDate = new Date(today);
             endDate.setDate(today.getDate() + 6);
             return { start: today, end: endDate };
         }
 
+        // Parse Datum aus "Sonntag 01.03." -> Date-Objekt (aktuelles Jahr)
+        function parseDayHeader(text) {
+            const match = text.match(/(\d{2})\.(\d{2})\./);
+            if (match) {
+                const year = new Date().getFullYear();
+                return new Date(year, parseInt(match[2]) - 1, parseInt(match[1]));
+            }
+            return null;
+        }
+
         // Uhrzeit aktualisieren
         function updateTime() {
             const now = new Date();
-            document.getElementById('current-time').textContent = now.toLocaleString('de-DE');
+            document.getElementById(‘current-time’).textContent = now.toLocaleString(‘de-DE’);
         }
         setInterval(updateTime, 1000);
         updateTime();
@@ -326,120 +329,130 @@
         // Wetterdaten abrufen
         async function fetchWeather() {
             try {
-                const coords = currentCity === 'lüneburg' ? { lat: 53.25, lon: 10.41 } : { lat: 53.4667, lon: 10.1833 };
+                const coords = currentCity === ‘lüneburg’ ? { lat: 53.25, lon: 10.41 } : { lat: 53.4667, lon: 10.1833 };
                 const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current_weather=true&timezone=Europe/Berlin`);
                 const data = await response.json();
                 const weather = data.current_weather;
-                document.getElementById('weather-info').innerHTML = 
+                document.getElementById(‘weather-info’).innerHTML =
                     `<strong>Temperatur:</strong> ${weather.temperature}°C<br>
-                     <strong>Wetter:</strong> ${weather.weathercode === 0 ? 'Klar' : weather.weathercode < 3 ? 'Bewölkt' : 'Regen/Schnee'}`;
+                     <strong>Wetter:</strong> ${weather.weathercode === 0 ? ‘Klar’ : weather.weathercode < 3 ? ‘Bewölkt’ : ‘Regen/Schnee’}`;
             } catch (error) {
-                document.getElementById('weather-info').textContent = 'Wetterdaten konnten nicht geladen werden.';
+                document.getElementById(‘weather-info’).textContent = ‘Wetterdaten konnten nicht geladen werden.’;
             }
         }
 
         // Helfer: Erstelle Google Maps-Link für einen Ort
-        function createMapsLink(location, city) {
-            const baseUrl = 'https://www.google.com/maps/search/?api=1&query=';
-            const fullLocation = `${location}, ${city === 'lüneburg' ? 'Lüneburg' : 'Hamburg-Harburg'}`;
+        function createMapsLink(location) {
+            const baseUrl = ‘https://www.google.com/maps/search/?api=1&query=’;
+            const fullLocation = `${location}, Lüneburg`;
             return `${baseUrl}${encodeURIComponent(fullLocation)}`;
         }
 
-        // Events für die ausgewählte Stadt laden (nur im aktuellen Zeitraum)
-        function loadEvents() {
-            const dateRange = getDateRange();
-            const eventsTitle = document.getElementById('events-title');
-            eventsTitle.textContent = `Events (${formatDate(dateRange.start)}–${formatDate(dateRange.end)})`;
+        // HTML von luene-info.de parsen
+        function parseEventsFromHTML(htmlText) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlText, ‘text/html’);
+            const rows = doc.querySelectorAll(‘tr’);
+            const events = [];
+            let currentDate = null;
+            let currentDateStr = ‘’;
 
-            const allEvents = {
-                lüneburg: {
-                    party: [
-                        { name: "Vollmondkonzert – Was uns verbindet", date: "18.03.2026, 20:00 Uhr", location: "Wasserturm Lüneburg", description: "Live-Musik und DJ-Sets unter dem Vollmond mit JaniPhil und Gästen." },
-                        { name: "Studentenparty im Luna", date: "19.03.2026, 22:00 Uhr", location: "Luna Music Club", description: "Die legendäre Studentenparty mit den besten DJs der Region." },
-                        { name: "80er & 90er Party", date: "20.03.2026, 21:00 Uhr", location: "Kulturforum Lüneburg", description: "Tanzt zu den größten Hits der 80er und 90er!" },
-                        { name: "Electro-Night mit DJane Jane", date: "21.03.2026, 23:00 Uhr", location: "Kaviar & Bullen", description: "Electro, Techno und House bis in die frühen Morgenstunden." },
-                        { name: "St. Patrick’s Day Afterparty", date: "22.03.2026, 20:00 Uhr", location: "Irish Pub Lüneburg", description: "Feiert den St. Patrick’s Day mit Live-Musik und grünem Bier." },
-                        { name: "Retro Gaming Party", date: "23.03.2026, 19:00 Uhr", location: "ByteBar", description: "Zocken, Musik und Drinks – die ultimative Retro-Gaming-Nacht." }
-                    ],
-                    theater: [
-                        { name: "Die Braumeisterin von Lüneburg", date: "18.03.2026, 20:00 Uhr", location: "Theater Lüneburg", description: "Ein unterhaltsames Theaterstück über die Braukunst und Geschichte Lüneburgs." },
-                        { name: "Kabarett: Hartmut Uhlemann", date: "19.03.2026, 19:30 Uhr", location: "TidE – Theater in der Elbtalaue", description: "Intelligente, böse und poetische Chansons – berührend komödiantisch." },
-                        { name: "Improtheater: Die Gorillas", date: "22.03.2026, 20:00 Uhr", location: "KulturBäckerei", description: "Spontanes Theater nach Publikumsvorgaben – jedes Mal einzigartig!" }
-                    ],
-                    ausstellung: [
-                        { name: "Museum Erleben: Misdroy und Wyk auf Föhr", date: "18.03.2026, 14:30 Uhr", location: "Ostpreußisches Landesmuseum", description: "Vortrag und Ausstellung über die Geschichte der Nordseeinseln." },
-                        { name: "Kunstausstellung: Moderne Malerei", date: "19.03.–24.03.2026, 10:00–18:00 Uhr", location: "Kunstverein Lüneburg", description: "Werke zeitgenössischer Künstler aus der Region." },
-                        { name: "Fotografie: Lüneburg im Wandel", date: "20.03.2026, 11:00 Uhr", location: "Stadtgalerie", description: "Historische und aktuelle Fotos der Salzstadt." },
-                        { name: "Memory der Dinge", date: "21.03.–23.03.2026, 12:00–17:00 Uhr", location: "Museum Lüneburg", description: "Eine interaktive Ausstellung über Erinnerungsstücke und ihre Geschichten." }
-                    ],
-                    konzerte: [
-                        { name: "Greenbeats – Momentum Tour 2026", date: "19.03.2026, 20:00 Uhr", location: "LKH Arena Lüneburg", description: "Die große Drumshow mit rhythmischen Highlights." },
-                        { name: "Elvis lebt (Musikkomödie)", date: "19.03.2026, 20:00 Uhr", location: "Libeskind Auditorium", description: "Eine humorvolle Hommage an den King of Rock ’n’ Roll." },
-                        { name: "The World of Hans Zimmer – The Immersive Symphony", date: "31.03.2026, 19:30 Uhr", location: "LKH Arena Lüneburg", description: "Ein einzigartiges Erlebnis mit den größten Filmmusik-Hits." }
-                    ]
-                },
-                harburg: {
-                    party: [
-                        { name: "Harburger Hafenparty", date: "18.03.2026, 21:00 Uhr", location: "Hafenclub Harburg", description: "Elektronische Musik und Drinks direkt am Hafen." },
-                        { name: "After-Work-Party", date: "20.03.2026, 19:00 Uhr", location: "Brauhaus Harburg", description: "Gemütliches Beisammensein mit Live-Musik." },
-                        { name: "Retro-Party", date: "22.03.2026, 22:00 Uhr", location: "Kulturladen Harburg", description: "Die besten Hits der 70er, 80er und 90er." }
-                    ],
-                    theater: [
-                        { name: "Theaterstück: Der Harburger Schatz", date: "19.03.2026, 20:00 Uhr", location: "Theater Harburg", description: "Ein humorvolles Stück über die Geschichte Harburgs." },
-                        { name: "Kabarett-Abend", date: "21.03.2026, 19:30 Uhr", location: "Kulturzentrum Harburg", description: "Politisches Kabarett mit regionalem Bezug." }
-                    ],
-                    ausstellung: [
-                        { name: "Kunstausstellung: Harburger Künstler", date: "18.03.–24.03.2026, 11:00–19:00 Uhr", location: "Galerie Harburg", description: "Werke lokaler Künstler aus Harburg." },
-                        { name: "Historische Ausstellung: Harburg früher", date: "20.03.2026, 14:00 Uhr", location: "Stadtmuseum Harburg", description: "Fotos und Dokumente zur Geschichte Harburgs." }
-                    ],
-                    konzerte: [
-                        { name: "Konzert: Harburger Musiknacht", date: "20.03.2026, 19:30 Uhr", location: "Stadthalle Harburg", description: "Lokale Bands und Solo-Künstler präsentieren ihr Repertoire." },
-                        { name: "Klassik-Abend mit dem Harburg Orchester", date: "22.03.2026, 20:00 Uhr", location: "Kulturkirche Harburg", description: "Klassische Musik in historischer Atmosphäre." }
-                    ]
+            for (const row of rows) {
+                // Datumszeile erkennen
+                const datumEl = row.querySelector(‘.termine_datum’);
+                if (datumEl) {
+                    currentDateStr = datumEl.textContent.trim();
+                    currentDate = parseDayHeader(currentDateStr);
+                    continue;
                 }
-            };
 
-            const eventsList = document.getElementById('events-list');
-            let html = '';
-            
-            // Events für die aktuelle Stadt und den aktuellen Zeitraum filtern
-            const cityEvents = allEvents[currentCity];
-            for (const [category, categoryEvents] of Object.entries(cityEvents)) {
-                const filteredEvents = categoryEvents.filter(event => {
-                    // Prüfe, ob das Event im aktuellen Zeitraum liegt
-                    return isEventInRange(event.date, dateRange.start, dateRange.end);
-                });
-                
-                if (filteredEvents.length > 0) {
-                    html += `<div class="category">
-                        <h3>${category.charAt(0).toUpperCase() + category.slice(1)}</h3>`;
-                    filteredEvents.forEach(event => {
-                        const mapsLink = createMapsLink(event.location, currentCity);
-                        html += `<div class="event-item">
-                            <div class="event-date">${event.date}</div>
-                            <div><strong>${event.name}</strong></div>
-                            <div class="event-location">
-                                <a href="${mapsLink}" target="_blank" rel="noopener noreferrer">${event.location}</a>
-                            </div>
-                            <div>${event.description}</div>
-                        </div>`;
+                // Event-Zeile erkennen
+                const titelEl = row.querySelector(‘.termine_titel’);
+                if (titelEl && currentDate) {
+                    const uhrzeitEl = row.querySelector(‘.termine_uhrzeit’);
+                    const titel2El = row.querySelector(‘.termine_titel_2’);
+                    const textEl = row.querySelector(‘.termine_text_2’);
+                    const ortEl = row.querySelector(‘.termine_ort’);
+
+                    const name = titelEl.textContent.trim();
+                    const subtitle = titel2El ? titel2El.textContent.trim() : ‘’;
+                    const fullName = subtitle ? `${name} – ${subtitle}` : name;
+
+                    events.push({
+                        date: currentDate,
+                        dateStr: currentDateStr,
+                        time: uhrzeitEl ? uhrzeitEl.textContent.trim().replace(/\s+/g, ‘ ‘) : ‘’,
+                        name: fullName,
+                        description: textEl ? textEl.textContent.trim().replace(/\s+/g, ‘ ‘) : ‘’,
+                        location: ortEl ? ortEl.textContent.trim() : ‘’
                     });
-                    html += `</div>`;
                 }
             }
-            
-            eventsList.innerHTML = html || '<p>Keine Events im ausgewählten Zeitraum gefunden.</p>';
+            return events;
+        }
+
+        // Events laden und anzeigen
+        async function loadEvents() {
+            const dateRange = getDateRange();
+            const eventsTitle = document.getElementById(‘events-title’);
+            eventsTitle.textContent = `Events Lüneburg (${formatDate(dateRange.start)}–${formatDate(dateRange.end)})`;
+            const eventsList = document.getElementById(‘events-list’);
+
+            if (currentCity !== ‘lüneburg’) {
+                eventsList.innerHTML = ‘<p>Für Harburg ist aktuell keine Event-Quelle verfügbar.</p>’;
+                return;
+            }
+
+            eventsList.innerHTML = ‘<p class="loading">Events werden geladen...</p>’;
+
+            try {
+                const response = await fetch(CORS_PROXY + encodeURIComponent(LUENE_INFO_URL));
+                if (!response.ok) throw new Error(‘Netzwerkfehler’);
+                const htmlText = await response.text();
+                const allEvents = parseEventsFromHTML(htmlText);
+
+                // Nach Zeitraum filtern
+                const filtered = allEvents.filter(e => e.date >= dateRange.start && e.date <= dateRange.end);
+
+                if (filtered.length === 0) {
+                    eventsList.innerHTML = ‘<p>Keine Events im ausgewählten Zeitraum gefunden.</p>’;
+                    return;
+                }
+
+                // Nach Datum gruppieren
+                let html = ‘’;
+                let lastDateStr = ‘’;
+                for (const event of filtered) {
+                    if (event.dateStr !== lastDateStr) {
+                        if (lastDateStr) html += ‘</div>’;
+                        html += `<div class="category"><h3>${event.dateStr}</h3>`;
+                        lastDateStr = event.dateStr;
+                    }
+                    const mapsLink = event.location ? createMapsLink(event.location) : ‘#’;
+                    html += `<div class="event-item">
+                        <div class="event-date">${event.time}</div>
+                        <div><strong>${event.name}</strong></div>
+                        ${event.location ? `<div class="event-location"><a href="${mapsLink}" target="_blank" rel="noopener noreferrer">${event.location}</a></div>` : ‘’}
+                        ${event.description ? `<div>${event.description}</div>` : ‘’}
+                    </div>`;
+                }
+                if (lastDateStr) html += ‘</div>’;
+
+                eventsList.innerHTML = html;
+            } catch (error) {
+                eventsList.innerHTML = ‘<p><strong>Aktuell kein Zugriff</strong> auf die Event-Daten.</p>’;
+            }
         }
 
         // Stadt wechseln
         function updateCity() {
-            currentCity = document.getElementById('city-select').value;
+            currentCity = document.getElementById(‘city-select’).value;
             fetchWeather();
             loadEvents();
         }
 
         // Daten beim Laden der Seite abrufen
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener(‘DOMContentLoaded’, () => {
             updateTime();
             fetchWeather();
             loadEvents();
