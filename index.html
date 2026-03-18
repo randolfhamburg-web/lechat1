@@ -299,13 +299,19 @@
             return `${day}.${month}.${year}`;
         }
 
-        // Berechne den aktuellen Zeitraum (heute + 6 Tage)
+        // Berechne den aktuellen Zeitraum (ganzer Monat)
         function getDateRange() {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            const endDate = new Date(today);
-            endDate.setDate(today.getDate() + 6);
+            const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            endDate.setHours(23, 59, 59, 999);
             return { start: today, end: endDate };
+        }
+
+        function formatDateRange() {
+            const monate = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+            const today = new Date();
+            return `${monate[today.getMonth()]} ${today.getFullYear()}`;
         }
 
         // Parse Datum aus "Sonntag 01.03." -> Date-Objekt (aktuelles Jahr)
@@ -397,11 +403,11 @@
         async function loadEvents() {
             const dateRange = getDateRange();
             const eventsTitle = document.getElementById('events-title');
-            eventsTitle.textContent = `Events Lüneburg (${formatDate(dateRange.start)}–${formatDate(dateRange.end)})`;
+            eventsTitle.textContent = `Events Lüneburg (${formatDateRange()})`;
             const eventsList = document.getElementById('events-list');
 
             if (currentCity !== 'lüneburg') {
-                eventsTitle.textContent = `Events Harburg (${formatDate(dateRange.start)}–${formatDate(dateRange.end)})`;
+                eventsTitle.textContent = `Events Harburg (${formatDateRange()})`;
                 eventsList.innerHTML = '<p>Für Harburg ist aktuell keine Event-Quelle verfügbar.</p>';
                 return;
             }
